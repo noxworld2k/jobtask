@@ -1,5 +1,6 @@
 import React from 'react';
-import './App.css';
+import './scss/main.scss';
+import '../node_modules/bootstrap/dist/js/bootstrap.bundle'
 import MainContent from "./components/MainContent";
 
 function App() {
