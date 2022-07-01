@@ -7,7 +7,8 @@ function MainContent() {
         user: '',
         language: '',
     });
-    const [github, setGithub] = useState<FileName<any>>();
+    const [github, setGithub] = useState<FileName<any> | undefined>();
+    const [error, setError] = useState<string | undefined>();
 
     interface FileName<Response> {
         map: Function;
@@ -17,11 +18,12 @@ function MainContent() {
         repository: {
             owner: {
                 login: string,
-                avatar_url: string,
+                avatar_url: string | null | undefined,
             },
             description: string | null
         }
     }
+
 
     const handleChange = (e: React.FormEvent<HTMLInputElement> | React.FormEvent<HTMLSelectElement>) => {
         setState({
@@ -34,17 +36,28 @@ function MainContent() {
     const onSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         const url = API + `${state.fileName} in:file user:${state.user} language:${state.language}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            setError(`Error! status: ${response.status}`);
+        }
         console.log(url);
         fetch(url,
             {
                 method: 'GET',
-            })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            }
+        )
             .then(response => response.json())
             .then(data => {
                 return setGithub(data.items)
             })
-            .catch(error => console.log(error));
-
+            .catch(error => {
+                setError(error)
+                console.log(error)
+            });
     }
 
 
@@ -90,21 +103,24 @@ function MainContent() {
 
                     </form>
                 </div>
-                <div className={"row"}>
+                {/*<div className={"row"}>*/}
 
-                    <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                        Launch demo modal
-                    </button>
-                    <div className="modal" tabIndex={-1} id={"exampleModal"}>
-                        <div className="modal-dialog">
-                            <div className="modal-content">
-                                {/*<div className="modal-body" ref={"userAvatarModal"}>*/}
-                                {/*</div>*/}
-                            </div>
-                        </div>
-                    </div>
+                {/*    <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal">*/}
+                {/*        Launch demo modal*/}
+                {/*    </button>*/}
+                {/*    <div className="modal" tabIndex={-1} id={"modal"}>*/}
+                {/*        <div className="modal-dialog">*/}
+                {/*            <div className="modal-content">*/}
 
-                </div>
+                {/*                <div className="modal-body">*/}
+                {/*                    <img ref={github.repository.owner.avatar_url}/>*/}
+                {/*                </div>*/}
+                {/*            </div>*/}
+                {/*        </div>*/}
+                {/*    </div>*/}
+
+                {/*</div>*/}
+                    {error && <div className={"alert alert-danger"}>{error}</div>}
                 <div>
                     <table className={"table table-striped"}>
                         <thead>
@@ -120,7 +136,8 @@ function MainContent() {
                                     <tr key={index}>
                                         <td>{item.name} <a rel="noreferrer" href={item.html_url} target={"_blank"}> <i
                                             className="fa-solid fa-link"></i> </a></td>
-                                        {/*<td><a data-bs-toggle="modal" data-bs-target="#exampleModal">{item.repository.owner.login}</a></td>*/}
+                                        <td><button data-bs-toggle="modal"
+                                               data-bs-target="#modal">{item.repository.owner.login}</button></td>
 
                                         <td>{item.repository.description}</td>
                                     </tr>
@@ -128,10 +145,9 @@ function MainContent() {
                             }
                         )}
 
+
                         </tbody>
-
                     </table>
-
                 </div>
             </div>
         </>
