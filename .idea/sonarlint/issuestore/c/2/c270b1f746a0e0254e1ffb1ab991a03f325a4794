@@ -1,0 +1,9 @@
+
+Jtypescript:S1128")Remove this unused import of 'createRef'.(ÕÚ’Úüÿÿÿÿ
+Ltypescript:S1128"0Remove this unused import of 'MutableRefObject'.(ãı·÷
+Etypescript:S1128")Remove this unused import of 'RefObject'.(•üÒí
+Mtypescript:S1128"1Remove this unused import of 'ImgHTMLAttributes'.(›¢ã¿
+Mtypescript:S1128"1Remove this unused import of 'DetailedHTMLProps'.(Åâ„
+ntypescript:S101"NRename interface "gitApi" to match the regular expression ^[A-Z][a-zA-Z0-9]*$.(¯°¸úÿÿÿÿ
+Stypescript:S1117C"2'response' is already declared in the upper scope.(ÆÄŠ¾ûÿÿÿÿ
+Ptypescript:S1117H"/'error' is already declared in the upper scope.(œİÈ…ûÿÿÿÿ

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {MutableRefObject, useState} from 'react';
 
 
 function MainContent() {
@@ -7,10 +7,22 @@ function MainContent() {
         user: '',
         language: '',
     });
-    const [github, setGithub] = useState<FileName<any> | undefined>();
-    const [error, setError] = useState<string | undefined>();
 
-    interface FileName<Response> {
+    const [github, setGithub] = useState<gitApi<any> | undefined>();
+    const [error, setError] = useState<string | undefined>();
+    const [queryApi, setQueryApi] = useState<string | undefined>();
+    const [modal, setModal] = useState<modalType<unknown>>({
+        isOpen: false,
+        avatar_url: ''
+    });
+    interface modalType<modalOpen> {
+        isOpen: boolean | MutableRefObject <boolean> | React.MutableRefObject<boolean>;
+        avatar_url: string | unknown;
+    }
+
+
+    interface gitApi<Response> {
+        owner: unknown;
         map: Function;
         id: string | number,
         name: string,
@@ -18,7 +30,7 @@ function MainContent() {
         repository: {
             owner: {
                 login: string,
-                avatar_url: string | null | undefined,
+                avatar_url: string,
             },
             description: string | null
         }
@@ -31,8 +43,7 @@ function MainContent() {
             [e.currentTarget.name]: e.currentTarget.value
         })
     };
-
-
+    const API = 'https://api.github.com/search/code?q=';
     const onSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         const url = API + `${state.fileName} in:file user:${state.user} language:${state.language}`;
@@ -52,6 +63,7 @@ function MainContent() {
         )
             .then(response => response.json())
             .then(data => {
+                setQueryApi(url);
                 return setGithub(data.items)
             })
             .catch(error => {
@@ -61,7 +73,34 @@ function MainContent() {
     }
 
 
-    const API = 'https://api.github.com/search/code?q=';
+    const changeNumberOfPages = async (event: React.FormEvent<HTMLInputElement> | React.FormEvent<HTMLSelectElement>) => {
+        event.preventDefault();
+        setState({
+            ...state,
+            perPage: Number(event.currentTarget.value),
+            page: 1,
+        })
+        setQueryApi(`${queryApi} per_page:${event.currentTarget.value} page:${1}`)
+        await fetch(encodeURIComponent(`${queryApi}`), {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                    console.log(queryApi)
+                    return setGithub(data.items)
+                }
+            )
+    }
+
+
+    const showAwatarModal = (e: React.MouseEvent<HTMLImageElement, MouseEvent>) => {
+        e.preventDefault();
+        const modalImg = document.getElementById('modal');
+        modalImg.src = modal.avatar_url;
+    }
 
 
     return (
@@ -97,30 +136,38 @@ function MainContent() {
                                 <option value="Java">Java</option>
                                 <option value="JavaScript">JavaScript</option>
                             </select>
-
                             <button type="submit" className={"btn btn-primary"}>Submit</button>
                         </div>
-
+                    </form>
+                    <form>
+                        <div className={"input-group"}>
+                            <select id="perPage" name="perPage" className={"form-select"}
+                                    onChange={changeNumberOfPages}>
+                                <option value="">Select per page</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="40">40</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
                     </form>
                 </div>
-                {/*<div className={"row"}>*/}
+                <div className={"row"}>
 
-                {/*    <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal">*/}
-                {/*        Launch demo modal*/}
-                {/*    </button>*/}
-                {/*    <div className="modal" tabIndex={-1} id={"modal"}>*/}
-                {/*        <div className="modal-dialog">*/}
-                {/*            <div className="modal-content">*/}
+                    <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal">
+                        Launch modal
+                    </button>
+                    <div className="modal" tabIndex={-1} id={"modal"}>
+                        <div className="modal-body">
+                            {github && <img id="modal"
+                                            src={github?.repository?.owner?.avatar_url}
+                            />}
+                        </div>
+                    </div>
 
-                {/*                <div className="modal-body">*/}
-                {/*                    <img ref={github.repository.owner.avatar_url}/>*/}
-                {/*                </div>*/}
-                {/*            </div>*/}
-                {/*        </div>*/}
-                {/*    </div>*/}
-
-                {/*</div>*/}
-                    {error && <div className={"alert alert-danger"}>{error}</div>}
+                </div>
+                {error && <div className={"alert alert-danger"}>{error}</div>}
                 <div>
                     <table className={"table table-striped"}>
                         <thead>
@@ -131,21 +178,29 @@ function MainContent() {
                         </tr>
                         </thead>
                         <tbody>
-                        {github && github.map((item: FileName<any>, index: number) => {
+                        {github && github.map((item: gitApi<any>, index: number) => {
                                 return (
                                     <tr key={index}>
                                         <td>{item.name} <a rel="noreferrer" href={item.html_url} target={"_blank"}> <i
                                             className="fa-solid fa-link"></i> </a></td>
-                                        <td><button data-bs-toggle="modal"
-                                               data-bs-target="#modal">{item.repository.owner.login}</button></td>
+                                        <td>
+                                                <button onClick={(e) =>{
+                                                    setModal(e.modal.isOpen =>  {
+                                                        !modal.isOpen
+                                                    })
+                                                    }}>
+                                                    Avatar Modal
+                                                </button>
+                                            {/*{item.repository.owner.avatar_url &&*/}
+                                            {/*    <img src={item.repository.owner.avatar_url}/>}*/}
+                                        </td>
+
 
                                         <td>{item.repository.description}</td>
                                     </tr>
                                 )
                             }
                         )}
-
-
                         </tbody>
                     </table>
                 </div>
